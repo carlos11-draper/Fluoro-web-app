@@ -270,6 +270,10 @@ const BrochureSlot = ({ token, onLogout }) => {
               ? `Current file: ${settings.brochure_filename || settings.brochure_url.split("/").pop()}`
               : "No brochure set — the download buttons are hidden on the site."}
           </p>
+          <p data-testid={BROCHURE.adminDownloads} className="mt-1.5 font-ibm-plex-mono text-xs text-blue-300">
+            Downloaded {settings.brochure_downloads || 0}{" "}
+            {(settings.brochure_downloads || 0) === 1 ? "time" : "times"} from the site
+          </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-4">
             <label

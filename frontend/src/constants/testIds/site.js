@@ -77,6 +77,7 @@ export const BROCHURE = {
   adminRemove: "admin-brochure-remove",
   adminOpen: "admin-brochure-open",
   adminFilename: "admin-brochure-filename",
+  adminDownloads: "admin-brochure-downloads",
 };
 
 export const PAGE = {

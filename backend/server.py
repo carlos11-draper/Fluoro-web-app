@@ -213,6 +213,7 @@ def _settings_response(doc):
     return {
         "brochure_url": doc.get("brochure_url", ""),
         "brochure_filename": doc.get("brochure_filename", ""),
+        "brochure_downloads": doc.get("brochure_downloads", 0),
     }
 
 
@@ -244,6 +245,15 @@ async def put_site_settings(payload: SiteSettingsPayload, email: str = Depends(r
     )
     doc = await db.site_config.find_one({"key": "settings"}, {"_id": 0})
     return _settings_response(doc)
+
+
+@api_router.post("/brochure/track-download")
+async def track_brochure_download():
+    await db.site_config.update_one(
+        {"key": "settings"}, {"$inc": {"brochure_downloads": 1}}, upsert=True
+    )
+    doc = await db.site_config.find_one({"key": "settings"}, {"_id": 0})
+    return {"brochure_downloads": (doc or {}).get("brochure_downloads", 0)}
 
 
 UPLOAD_TMP = Path("/tmp/fs_uploads")

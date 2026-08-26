@@ -80,6 +80,10 @@ shiny-gradient headline (framer-motion `ShinyText`), rounded-full CTAs with arro
 - Public "Download portfolio" buttons (auto-hide when unset): Home hero, RFQ section
   (Home + Contact), footer CTA band. Component: `components/site/BrochureButton.jsx`,
   provider: `context/SiteSettings.jsx`.
+- **Brochure download counter**: public buttons beacon `POST /api/brochure/track-download`
+  ($inc on settings doc); count returned in `GET /api/site-settings` and shown in the /admin
+  brochure slot ("Downloaded N times from the site"). Admin's "Open current PDF" is NOT counted.
+  Verified: pytest test_brochure.py 8/8 + UI screenshot; counter reset to 0 after tests.
 - **WhatsApp floating button: explicitly dropped by owner** — do not build.
 - Verified: pytest `tests/test_brochure.py` 7/7; full suite 41/42 (1 pre-existing xdist race in
   test_admin ↔ test_uploads shared site-images state, passes serially); frontend iteration_4

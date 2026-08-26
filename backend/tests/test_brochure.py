@@ -90,6 +90,15 @@ class TestSiteSettings:
         assert r.status_code == 200
         body = r.json()
         assert "brochure_url" in body and "brochure_filename" in body
+        assert isinstance(body.get("brochure_downloads"), int)
+
+    def test_track_download_increments(self, client):
+        before = client.get(f"{BASE_URL}/api/site-settings", timeout=30).json()["brochure_downloads"]
+        r = client.post(f"{BASE_URL}/api/brochure/track-download", timeout=30)
+        assert r.status_code == 200
+        assert r.json()["brochure_downloads"] == before + 1
+        after = client.get(f"{BASE_URL}/api/site-settings", timeout=30).json()["brochure_downloads"]
+        assert after == before + 1
 
     def test_put_requires_auth(self, client):
         r = client.put(
@@ -143,7 +152,8 @@ class TestSiteSettings:
             timeout=30,
         )
         assert r.status_code == 200
-        assert r.json() == {"brochure_url": "", "brochure_filename": ""}
+        cleared = r.json()
+        assert cleared["brochure_url"] == "" and cleared["brochure_filename"] == ""
 
         # restore original state
         client.put(
