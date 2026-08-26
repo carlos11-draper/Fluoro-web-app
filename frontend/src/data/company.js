@@ -26,6 +26,9 @@ const ASSETS = {
   butlerFloor:
     "https://customer-assets-v7afamib.emergentagent.net/job_company-portal-256/artifacts/up19s0z1_IMG_1159.webp",
   hydraulic: "https://images.pexels.com/photos/36532643/pexels-photo-36532643.jpeg",
+  // Rotated 90° CW copies (originals were sideways), stored in object storage.
+  machinedSteelUpright: "/api/files/fluoro-seals/site-media/e395a521-5f15-4e81-bda8-40c61ecf0aaa.webp",
+  boringMachineUpright: "/api/files/fluoro-seals/site-media/6d4ec1f5-6da2-43c9-a63b-0de64f4e0279.webp",
 };
 
 // Editable media slots — overridable from the admin panel at /admin.
@@ -33,9 +36,9 @@ export const DEFAULT_IMAGES = {
   heroVideo: HERO_VIDEO,
   heroBackdrop: ASSETS.butlerFloor,
   machineServicing: ASSETS.butlerFloor,
-  spareManufacturing: ASSETS.machinedSteel,
-  importSubstitution: ASSETS.boringMachine,
-  capabilities: ASSETS.boringMachine,
+  spareManufacturing: ASSETS.machinedSteelUpright,
+  importSubstitution: ASSETS.boringMachineUpright,
+  capabilities: ASSETS.boringMachineUpright,
   story: ASSETS.butlerComponent,
   founder: ASSETS.butlerComponent,
   caseReconditioning: ASSETS.butlerFloor,

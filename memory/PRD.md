@@ -89,6 +89,12 @@ shiny-gradient headline (framer-motion `ShinyText`), rounded-full CTAs with arro
   test_admin ↔ test_uploads shared site-images state, passes serially); frontend iteration_4
   report 100% (upload → buttons live → open new tab → remove → auto-hide).
 
+### Phase 5 — June 2026 (image orientation fix)
+- IMG_1155/IMG_1101 (spareManufacturing, importSubstitution, capabilities slots) were sideways;
+  rotated 90° CW with PIL, uploaded to object storage, DB overrides + DEFAULT_IMAGES updated so
+  "Reset to original" keeps the upright versions. Other slots using the same source assets
+  (e.g. caseInjection) intentionally untouched — owner did not request them.
+
 ## Backlog
 - **P0** — Restore real EMERGENT_EMAIL_KEY (deployment secret) so enquiry emails send again
 - **P0** — Owner to confirm real inbox receipt of owner alert + customer auto-reply
