@@ -65,6 +65,13 @@ export const ADMIN = {
   preview: (key) => `admin-image-preview-${key}`,
   save: "admin-save-images",
   reset: (key) => `admin-image-reset-${key}`,
+  rotate: (key) => `admin-image-rotate-${key}`,
+  crop: (key) => `admin-image-crop-${key}`,
+  hide: (key) => `admin-image-hide-${key}`,
+  hiddenBadge: (key) => `admin-image-hidden-${key}`,
+  cropDialog: "admin-crop-dialog",
+  cropApply: "admin-crop-apply",
+  cropCancel: "admin-crop-cancel",
   logout: "admin-logout",
 };
 

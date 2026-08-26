@@ -23,22 +23,24 @@ export default function Founder() {
       <section className="py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 grid grid-cols-1 lg:grid-cols-12 gap-14 items-start">
           <Reveal className="lg:col-span-5">
-            <div className="relative border border-slate-300 bg-white p-2">
-              <CornerMarkers />
-              <img
-                src={img.founder}
-                alt={FOUNDER.name}
-                className="w-full h-[380px] sm:h-[520px] object-cover"
-              />
-              <div className="absolute bottom-4 left-4 bg-slate-950/90 backdrop-blur px-5 py-3">
-                <div className="font-oswald font-medium uppercase text-white text-lg leading-tight">
-                  {FOUNDER.name}
-                </div>
-                <div className="font-ibm-plex-mono text-[0.6rem] tracking-[0.2em] uppercase text-blue-400">
-                  {FOUNDER.role}
+            {img.founder && (
+              <div className="relative border border-slate-300 bg-white p-2">
+                <CornerMarkers />
+                <img
+                  src={img.founder}
+                  alt={FOUNDER.name}
+                  className="w-full h-[380px] sm:h-[520px] object-cover"
+                />
+                <div className="absolute bottom-4 left-4 bg-slate-950/90 backdrop-blur px-5 py-3">
+                  <div className="font-oswald font-medium uppercase text-white text-lg leading-tight">
+                    {FOUNDER.name}
+                  </div>
+                  <div className="font-ibm-plex-mono text-[0.6rem] tracking-[0.2em] uppercase text-blue-400">
+                    {FOUNDER.role}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
             <div className="mt-10">
               <SpecTable rows={STORY.specs} />
             </div>

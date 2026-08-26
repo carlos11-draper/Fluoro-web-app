@@ -7,6 +7,8 @@ const Ctx = createContext(DEFAULT_IMAGES);
 
 export const useSiteImages = () => useContext(Ctx);
 
+export const HIDDEN_VALUE = "__hidden__";
+
 // Uploaded media is stored as "/api/files/..." — resolve against the backend origin.
 export const resolveMediaUrl = (url) =>
   url && url.startsWith("/") ? `${BACKEND}${url}` : url;
@@ -21,7 +23,10 @@ export const SiteImagesProvider = ({ children }) => {
         const merged = { ...DEFAULT_IMAGES, ...(data.images || {}) };
         setImages(
           Object.fromEntries(
-            Object.entries(merged).map(([k, v]) => [k, resolveMediaUrl(v)])
+            Object.entries(merged).map(([k, v]) => [
+              k,
+              v === HIDDEN_VALUE ? "" : resolveMediaUrl(v),
+            ])
           )
         );
       })

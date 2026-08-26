@@ -22,21 +22,25 @@ export const Hero = () => {
       className="relative h-screen min-h-[680px] w-full overflow-hidden bg-black"
     >
       {/* Backdrop: still with Ken-Burns drift, video layered over it */}
-      <img
-        src={img.heroBackdrop}
-        alt="Fluoro Seals factory floor"
-        className="absolute inset-0 h-full w-full object-cover ken-burns"
-      />
-      <video
-        data-testid={HERO.video}
-        className="absolute inset-0 h-full w-full object-cover"
-        src={img.heroVideo}
-        poster={img.heroBackdrop}
-        autoPlay
-        loop
-        muted
-        playsInline
-      />
+      {img.heroBackdrop && (
+        <img
+          src={img.heroBackdrop}
+          alt="Fluoro Seals factory floor"
+          className="absolute inset-0 h-full w-full object-cover ken-burns"
+        />
+      )}
+      {img.heroVideo && (
+        <video
+          data-testid={HERO.video}
+          className="absolute inset-0 h-full w-full object-cover"
+          src={img.heroVideo}
+          poster={img.heroBackdrop || undefined}
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      )}
 
       {/* Steel-navy grading */}
       <div className="absolute inset-0 bg-slate-950/72" />

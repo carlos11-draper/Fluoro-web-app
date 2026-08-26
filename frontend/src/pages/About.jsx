@@ -48,14 +48,16 @@ export default function About() {
           </div>
 
           <Reveal delay={0.15} className="lg:col-span-5">
-            <div className="relative border border-slate-300 bg-white p-2">
-              <CornerMarkers />
-              <img
-                src={img.story}
-                alt="Fluoro Seals precision machining"
-                className="w-full h-[360px] sm:h-[520px] object-cover"
-              />
-            </div>
+            {img.story && (
+              <div className="relative border border-slate-300 bg-white p-2">
+                <CornerMarkers />
+                <img
+                  src={img.story}
+                  alt="Fluoro Seals precision machining"
+                  className="w-full h-[360px] sm:h-[520px] object-cover"
+                />
+              </div>
+            )}
           </Reveal>
         </div>
       </section>

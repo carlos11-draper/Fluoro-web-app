@@ -130,14 +130,16 @@ export default function ImportSubstitution() {
             </StaggerGroup>
           </div>
           <Reveal delay={0.1} className="lg:col-span-5">
-            <div className="relative border border-slate-300 bg-white p-2">
-              <CornerMarkers />
-              <img
-                src={img.importSubstitution}
-                alt="Reverse-engineered die casting spare on the boring machine"
-                className="w-full h-[320px] sm:h-[460px] object-cover"
-              />
-            </div>
+            {img.importSubstitution && (
+              <div className="relative border border-slate-300 bg-white p-2">
+                <CornerMarkers />
+                <img
+                  src={img.importSubstitution}
+                  alt="Reverse-engineered die casting spare on the boring machine"
+                  className="w-full h-[320px] sm:h-[460px] object-cover"
+                />
+              </div>
+            )}
           </Reveal>
         </div>
       </section>

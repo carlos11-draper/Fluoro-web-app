@@ -17,11 +17,13 @@ export const StorySection = () => {
       <div className="mx-auto max-w-7xl px-5 sm:px-8 grid grid-cols-1 lg:grid-cols-12 gap-14 items-center">
         <Reveal className="lg:col-span-5 order-2 lg:order-1">
           <div className="relative">
-            <img
-              src={img.story}
-              alt="Precision machined die casting component"
-              className="w-full h-[340px] sm:h-[460px] object-cover"
-            />
+            {img.story && (
+              <img
+                src={img.story}
+                alt="Precision machined die casting component"
+                className="w-full h-[340px] sm:h-[460px] object-cover"
+              />
+            )}
             <div className="absolute -bottom-5 -right-3 bg-blue-600 px-5 py-4">
               <div className="font-ibm-plex-mono text-[0.6rem] tracking-[0.2em] uppercase text-white/70">
                 Founded

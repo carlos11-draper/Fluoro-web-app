@@ -30,11 +30,13 @@ export const ProofSection = ({ limit = 4, showHeader = true }) => {
                 }`}
               >
                 <div className="lg:col-span-5 overflow-hidden [direction:ltr]">
-                  <img
-                    src={img[c.imageKey]}
-                    alt={c.title}
-                    className="w-full h-[240px] sm:h-[300px] object-cover transition-transform duration-[900ms] ease-out group-hover:scale-105"
-                  />
+                  {img[c.imageKey] && (
+                    <img
+                      src={img[c.imageKey]}
+                      alt={c.title}
+                      className="w-full h-[240px] sm:h-[300px] object-cover transition-transform duration-[900ms] ease-out group-hover:scale-105"
+                    />
+                  )}
                 </div>
                 <div className="lg:col-span-7 [direction:ltr]">
                   <div className="flex items-center gap-4">

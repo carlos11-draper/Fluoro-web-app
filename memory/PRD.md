@@ -95,6 +95,18 @@ shiny-gradient headline (framer-motion `ShinyText`), rounded-full CTAs with arro
   "Reset to original" keeps the upright versions. Other slots using the same source assets
   (e.g. caseInjection) intentionally untouched — owner did not request them.
 
+### Phase 6 — June 2026 (admin image editing)
+- Per-slot controls in /admin: **Rotate 90° CW**, **Crop** (react-easy-crop dialog: aspect presets
+  16:9/4:3/1:1/3:4 + zoom; server-side PIL via admin-only `POST /api/media/transform`, outputs new
+  WEBP in object storage), **Hide on site** (sentinel `__hidden__` in site_config; provider maps it
+  to "" and all 11 public image usages render conditionally — image fully absent from DOM),
+  plus existing Upload / paste-link / Reset-to-original. Video slot: Hide only (no rotate/crop).
+- PUT /api/site-images accepts `__hidden__`; transform validates rotate ∈ {0,90,180,270}, crop
+  bounds, 30MB fetch cap, auth required.
+- Verified: pytest tests/test_media_edit.py 8/8; frontend iteration_5 100% (rotate/crop/hide e2e
+  incl. mobile, regression on all pages). Known: chained edits orphan old storage objects (no GC).
+- Cleaned test pollution: founder/heroBackdrop overrides left by earlier suite races unset.
+
 ## Backlog
 - **P0** — Restore real EMERGENT_EMAIL_KEY (deployment secret) so enquiry emails send again
 - **P0** — Owner to confirm real inbox receipt of owner alert + customer auto-reply

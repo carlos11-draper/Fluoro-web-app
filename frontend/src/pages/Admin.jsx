@@ -1,9 +1,24 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { toast } from "sonner";
-import { Loader2, LogOut, RotateCcw, Save, ShieldCheck, Trash2, Upload, FileText, ExternalLink } from "lucide-react";
+import Cropper from "react-easy-crop";
+import {
+  Crop,
+  ExternalLink,
+  EyeOff,
+  FileText,
+  Loader2,
+  LogOut,
+  RotateCcw,
+  RotateCw,
+  Save,
+  ShieldCheck,
+  Trash2,
+  Upload,
+} from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DEFAULT_IMAGES, MEDIA_FIELDS } from "@/data/company";
-import { resolveMediaUrl } from "@/context/SiteImages";
+import { resolveMediaUrl, HIDDEN_VALUE } from "@/context/SiteImages";
 import { uploadMedia } from "@/lib/upload";
 import { ADMIN, BROCHURE } from "@/constants/testIds";
 
@@ -97,9 +112,111 @@ const LoginCard = ({ onAuthed }) => {
   );
 };
 
+const ASPECTS = [
+  { label: "Wide 16:9", value: 16 / 9 },
+  { label: "Standard 4:3", value: 4 / 3 },
+  { label: "Square 1:1", value: 1 },
+  { label: "Tall 3:4", value: 3 / 4 },
+];
+
+const CropDialog = ({ open, imageUrl, busy, onApply, onClose }) => {
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [aspect, setAspect] = useState(4 / 3);
+  const [area, setArea] = useState(null);
+
+  useEffect(() => {
+    if (open) {
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setArea(null);
+    }
+  }, [open, aspect]);
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && !busy && onClose()}>
+      <DialogContent
+        data-testid={ADMIN.cropDialog}
+        className="bg-slate-900 border-white/15 text-white sm:max-w-2xl"
+      >
+        <DialogHeader>
+          <DialogTitle className="font-oswald uppercase tracking-tight">Crop image</DialogTitle>
+        </DialogHeader>
+        <div className="relative h-[340px] bg-black">
+          {imageUrl && (
+            <Cropper
+              image={imageUrl}
+              crop={crop}
+              zoom={zoom}
+              aspect={aspect}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={(_, px) => setArea(px)}
+            />
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {ASPECTS.map((a) => (
+            <button
+              key={a.label}
+              data-testid={`admin-crop-aspect-${a.label.split(" ")[0].toLowerCase()}`}
+              onClick={() => setAspect(a.value)}
+              className={`rounded-full px-3 py-1.5 font-ibm-plex-mono text-[0.6rem] tracking-[0.12em] uppercase border transition-colors ${
+                aspect === a.value
+                  ? "bg-blue-600 border-blue-600 text-white"
+                  : "border-white/25 text-white/70 hover:bg-white/10"
+              }`}
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+        <label className="flex items-center gap-3">
+          <span className="font-ibm-plex-mono text-[0.6rem] tracking-[0.15em] uppercase text-white/50">
+            Zoom
+          </span>
+          <input
+            data-testid="admin-crop-zoom"
+            type="range"
+            min="1"
+            max="3"
+            step="0.05"
+            value={zoom}
+            onChange={(e) => setZoom(Number(e.target.value))}
+            className="flex-1 accent-blue-500"
+          />
+        </label>
+        <div className="flex justify-end gap-3">
+          <button
+            data-testid={ADMIN.cropCancel}
+            onClick={onClose}
+            disabled={busy}
+            className="rounded-full border border-white/25 text-white text-sm px-5 py-2.5 hover:bg-white/10 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            data-testid={ADMIN.cropApply}
+            onClick={() => area && onApply(area)}
+            disabled={busy || !area}
+            className="inline-flex items-center gap-2 rounded-full bg-blue-600 text-white text-sm px-6 py-2.5 hover:bg-white hover:text-slate-950 transition-colors disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crop className="h-4 w-4" />}
+            Apply crop
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const MediaSlot = ({ field, value, token, onChange }) => {
   const [progress, setProgress] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [cropOpen, setCropOpen] = useState(false);
   const isVideo = field.kind === "video";
+  const isHidden = value === HIDDEN_VALUE;
+  const canEdit = Boolean(value) && !isHidden && !isVideo;
 
   const pick = async (e) => {
     const file = e.target.files?.[0];
@@ -117,12 +234,44 @@ const MediaSlot = ({ field, value, token, onChange }) => {
     }
   };
 
+  const transform = async (payload, okMsg) => {
+    setEditing(true);
+    try {
+      const { data } = await axios.post(
+        `${API}/media/transform`,
+        { url: value, ...payload },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      onChange(data.url);
+      setCropOpen(false);
+      toast.success(`${okMsg} — remember to save.`);
+    } catch (err) {
+      toast.error(errText(err.response?.data?.detail) || "Edit failed");
+    } finally {
+      setEditing(false);
+    }
+  };
+
+  const actionCls =
+    "inline-flex items-center gap-2 font-ibm-plex-mono text-[0.65rem] tracking-[0.15em] uppercase transition-colors disabled:opacity-50";
+
   return (
     <div className="border border-white/12 bg-white/[0.03] p-5 flex gap-5">
-      {isVideo ? (
+      {isHidden ? (
+        <div
+          data-testid={ADMIN.hiddenBadge(field.key)}
+          className="h-28 w-28 shrink-0 border border-white/10 bg-white/5 flex flex-col items-center justify-center gap-2"
+        >
+          <EyeOff className="h-6 w-6 text-white/40" strokeWidth={1.5} />
+          <span className="font-ibm-plex-mono text-[0.55rem] tracking-[0.15em] uppercase text-white/40">
+            Hidden
+          </span>
+        </div>
+      ) : isVideo ? (
         <video
           data-testid={ADMIN.preview(field.key)}
           src={resolveMediaUrl(value)}
+          poster={resolveMediaUrl(DEFAULT_IMAGES.heroBackdrop)}
           muted
           loop
           autoPlay
@@ -148,15 +297,21 @@ const MediaSlot = ({ field, value, token, onChange }) => {
           </div>
         )}
 
-        <input
-          data-testid={ADMIN.input(field.key)}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="Paste a link, or upload below"
-          className="mt-3 w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 font-ibm-plex-mono text-xs text-white outline-none focus:border-blue-400 transition-colors"
-        />
+        {isHidden ? (
+          <p className="mt-3 font-ibm-plex-mono text-xs text-amber-300/90">
+            This image is hidden on the website. Upload a new one or reset to show it again.
+          </p>
+        ) : (
+          <input
+            data-testid={ADMIN.input(field.key)}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="Paste a link, or upload below"
+            className="mt-3 w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 font-ibm-plex-mono text-xs text-white outline-none focus:border-blue-400 transition-colors"
+          />
+        )}
 
-        <div className="mt-3 flex flex-wrap items-center gap-4">
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
           <label
             data-testid={ADMIN.upload(field.key)}
             className="inline-flex items-center gap-2 rounded-full border border-white/25 px-4 py-2 font-ibm-plex-mono text-[0.65rem] tracking-[0.15em] uppercase text-white cursor-pointer hover:bg-white/10 transition-colors"
@@ -171,10 +326,45 @@ const MediaSlot = ({ field, value, token, onChange }) => {
               className="hidden"
             />
           </label>
+          {canEdit && (
+            <>
+              <button
+                data-testid={ADMIN.rotate(field.key)}
+                onClick={() => transform({ rotate: 90 }, "Rotated 90°")}
+                disabled={editing}
+                className={`${actionCls} text-white/80 hover:text-white`}
+              >
+                {editing ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <RotateCw className="h-3.5 w-3.5" />
+                )}
+                Rotate
+              </button>
+              <button
+                data-testid={ADMIN.crop(field.key)}
+                onClick={() => setCropOpen(true)}
+                disabled={editing}
+                className={`${actionCls} text-white/80 hover:text-white`}
+              >
+                <Crop className="h-3.5 w-3.5" /> Crop
+              </button>
+            </>
+          )}
+          {!isHidden && (
+            <button
+              data-testid={ADMIN.hide(field.key)}
+              onClick={() => onChange(HIDDEN_VALUE)}
+              disabled={editing}
+              className={`${actionCls} text-amber-300/90 hover:text-amber-200`}
+            >
+              <EyeOff className="h-3.5 w-3.5" /> Hide on site
+            </button>
+          )}
           <button
             data-testid={ADMIN.reset(field.key)}
             onClick={() => onChange(DEFAULT_IMAGES[field.key])}
-            className="inline-flex items-center gap-2 font-ibm-plex-mono text-[0.65rem] tracking-[0.15em] uppercase text-blue-300 hover:text-white transition-colors"
+            className={`${actionCls} text-blue-300 hover:text-white`}
           >
             <RotateCcw className="h-3.5 w-3.5" /> Reset to original
           </button>
@@ -189,6 +379,28 @@ const MediaSlot = ({ field, value, token, onChange }) => {
           </div>
         )}
       </div>
+
+      {!isVideo && (
+        <CropDialog
+          open={cropOpen}
+          imageUrl={resolveMediaUrl(value)}
+          busy={editing}
+          onApply={(area) =>
+            transform(
+              {
+                crop: {
+                  x: Math.round(area.x),
+                  y: Math.round(area.y),
+                  width: Math.round(area.width),
+                  height: Math.round(area.height),
+                },
+              },
+              "Cropped"
+            )
+          }
+          onClose={() => setCropOpen(false)}
+        />
+      )}
     </div>
   );
 };

@@ -13,10 +13,13 @@ from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
+import io
 import os
 import logging
 import re
 import shutil
+import requests as http_requests
+from PIL import Image
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr, constr
 from typing import List, Dict
@@ -184,6 +187,9 @@ async def get_site_images():
     return {"images": (doc or {}).get("images", {})}
 
 
+HIDDEN_VALUE = "__hidden__"
+
+
 @api_router.put("/site-images")
 async def put_site_images(payload: SiteImagesPayload, email: str = Depends(require_admin)):
     updates = {}
@@ -193,7 +199,9 @@ async def put_site_images(payload: SiteImagesPayload, email: str = Depends(requi
         url = url.strip()
         if not url:
             continue
-        if not url.startswith(("http://", "https://", "/api/files/")) or len(url) > 800:
+        if url != HIDDEN_VALUE and (
+            not url.startswith(("http://", "https://", "/api/files/")) or len(url) > 800
+        ):
             raise HTTPException(status_code=400, detail=f"Invalid URL for {key}")
         updates[f"images.{key}"] = url
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
@@ -254,6 +262,97 @@ async def track_brochure_download():
     )
     doc = await db.site_config.find_one({"key": "settings"}, {"_id": 0})
     return {"brochure_downloads": (doc or {}).get("brochure_downloads", 0)}
+
+
+MAX_TRANSFORM_BYTES = 30 * 1024 * 1024
+
+
+class CropBox(BaseModel):
+    x: int
+    y: int
+    width: int
+    height: int
+
+
+class TransformPayload(BaseModel):
+    url: constr(min_length=1, max_length=800)
+    rotate: int = 0
+    crop: CropBox | None = None
+
+
+@api_router.post("/media/transform")
+async def transform_media(payload: TransformPayload, email: str = Depends(require_admin)):
+    if payload.rotate not in (0, 90, 180, 270):
+        raise HTTPException(status_code=400, detail="Rotate must be 0, 90, 180 or 270")
+    url = payload.url.strip()
+
+    if url.startswith("/api/files/"):
+        path = url[len("/api/files/"):]
+        record = await db.files.find_one({"storage_path": path, "is_deleted": False})
+        if not record:
+            raise HTTPException(status_code=404, detail="File not found")
+        data, _ = await asyncio.to_thread(get_object, path)
+    elif url.startswith(("http://", "https://")):
+        def _fetch():
+            r = http_requests.get(url, timeout=60, stream=True)
+            r.raise_for_status()
+            buf = b""
+            for chunk in r.iter_content(256 * 1024):
+                buf += chunk
+                if len(buf) > MAX_TRANSFORM_BYTES:
+                    raise ValueError("Image is too large to edit")
+            return buf
+        try:
+            data = await asyncio.to_thread(_fetch)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        except Exception:
+            raise HTTPException(status_code=400, detail="Could not fetch the image from that link")
+    else:
+        raise HTTPException(status_code=400, detail="Invalid image URL")
+
+    def _edit():
+        img = Image.open(io.BytesIO(data))
+        if img.mode not in ("RGB", "RGBA"):
+            img = img.convert("RGB")
+        if payload.crop:
+            c = payload.crop
+            left, top = max(0, c.x), max(0, c.y)
+            right = min(img.width, c.x + c.width)
+            bottom = min(img.height, c.y + c.height)
+            if right - left < 10 or bottom - top < 10:
+                raise ValueError("Crop area is too small")
+            img = img.crop((left, top, right, bottom))
+        if payload.rotate:
+            img = img.transpose(
+                {90: Image.ROTATE_270, 180: Image.ROTATE_180, 270: Image.ROTATE_90}[payload.rotate]
+            )
+        out = io.BytesIO()
+        img.save(out, format="WEBP", quality=88)
+        return out.getvalue()
+
+    try:
+        edited = await asyncio.to_thread(_edit)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=400, detail="That file is not an editable image")
+
+    new_path = f"{APP_NAME}/site-media/{uuid.uuid4()}.webp"
+    result = await asyncio.to_thread(put_object, new_path, edited, "image/webp")
+    await db.files.insert_one(
+        {
+            "id": str(uuid.uuid4()),
+            "storage_path": result["path"],
+            "original_filename": "edited.webp",
+            "content_type": "image/webp",
+            "size": result.get("size", len(edited)),
+            "is_deleted": False,
+            "uploaded_by": email,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+    )
+    return {"url": f"/api/files/{result['path']}"}
 
 
 UPLOAD_TMP = Path("/tmp/fs_uploads")

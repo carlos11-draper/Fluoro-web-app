@@ -73,14 +73,16 @@ export default function Capabilities() {
             </Reveal>
           </div>
           <Reveal delay={0.15} className="lg:col-span-5">
-            <div className="relative border border-slate-300 bg-white p-2">
-              <CornerMarkers />
-              <img
-                src={img.capabilities}
-                alt="Heavy-capacity plano milling and boring plant"
-                className="w-full h-[360px] sm:h-[520px] object-cover"
-              />
-            </div>
+            {img.capabilities && (
+              <div className="relative border border-slate-300 bg-white p-2">
+                <CornerMarkers />
+                <img
+                  src={img.capabilities}
+                  alt="Heavy-capacity plano milling and boring plant"
+                  className="w-full h-[360px] sm:h-[520px] object-cover"
+                />
+              </div>
+            )}
           </Reveal>
         </div>
       </section>

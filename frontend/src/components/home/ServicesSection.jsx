@@ -35,21 +35,23 @@ export const ServicesSection = () => {
                   data-testid={SECTION.serviceCard(s.no)}
                   className="group block h-full bg-white border border-slate-200 hover:border-blue-600 transition-colors duration-500 overflow-hidden"
                 >
-                  <div className="relative h-48 overflow-hidden">
-                    <img
-                      src={img[s.imageKey]}
-                      alt={s.title}
-                      className="h-full w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-slate-950/45 group-hover:bg-slate-950/20 transition-colors duration-500" />
-                    <span className="absolute top-4 left-4 font-oswald font-bold text-white/70 text-3xl leading-none">
-                      {s.no}
-                    </span>
-                    <Icon
-                      className="absolute bottom-4 right-4 h-7 w-7 text-blue-300"
-                      strokeWidth={1.5}
-                    />
-                  </div>
+                  {img[s.imageKey] && (
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={img[s.imageKey]}
+                        alt={s.title}
+                        className="h-full w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-slate-950/45 group-hover:bg-slate-950/20 transition-colors duration-500" />
+                      <span className="absolute top-4 left-4 font-oswald font-bold text-white/70 text-3xl leading-none">
+                        {s.no}
+                      </span>
+                      <Icon
+                        className="absolute bottom-4 right-4 h-7 w-7 text-blue-300"
+                        strokeWidth={1.5}
+                      />
+                    </div>
+                  )}
                   <div className="p-7">
                     <Tag>{s.tag}</Tag>
                     <h3 className="mt-4 font-oswald font-medium uppercase text-slate-900 text-xl sm:text-2xl tracking-tight">

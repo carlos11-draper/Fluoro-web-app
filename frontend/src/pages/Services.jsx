@@ -29,14 +29,16 @@ export default function Services() {
               className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center"
             >
               <Reveal className={`lg:col-span-6 ${i % 2 ? "lg:order-2" : ""}`}>
-                <div className="relative border border-slate-300 bg-white p-2">
-                  <CornerMarkers />
-                  <img
-                    src={img[s.imageKey]}
-                    alt={s.title}
-                    className="w-full h-[320px] sm:h-[440px] object-cover"
-                  />
-                </div>
+                {img[s.imageKey] && (
+                  <div className="relative border border-slate-300 bg-white p-2">
+                    <CornerMarkers />
+                    <img
+                      src={img[s.imageKey]}
+                      alt={s.title}
+                      className="w-full h-[320px] sm:h-[440px] object-cover"
+                    />
+                  </div>
+                )}
               </Reveal>
               <div className={`lg:col-span-6 ${i % 2 ? "lg:order-1" : ""}`}>
                 <Reveal>

@@ -38,14 +38,16 @@ export const CapabilitiesSection = () => {
 
         <div className="lg:col-span-6 space-y-8">
           <Reveal delay={0.1}>
-            <div className="relative border border-slate-300 bg-white p-2">
-              <CornerMarkers />
-              <img
-                src={img.capabilities}
-                alt="Heavy-capacity boring and milling plant"
-                className="w-full h-[300px] sm:h-[380px] object-cover"
-              />
-            </div>
+            {img.capabilities && (
+              <div className="relative border border-slate-300 bg-white p-2">
+                <CornerMarkers />
+                <img
+                  src={img.capabilities}
+                  alt="Heavy-capacity boring and milling plant"
+                  className="w-full h-[300px] sm:h-[380px] object-cover"
+                />
+              </div>
+            )}
           </Reveal>
           <Reveal delay={0.2}>
             <SpecTable rows={CAPABILITIES.specs} />
