@@ -1,0 +1,42 @@
+{
+  "summary": "Iteration 3: focused testing of the new phone-photo upload + hero-video replacement feature (Emergent object storage + chunked uploads) plus a light regression pass. Backend: 35/35 pytest tests pass (new /app/backend/tests/test_uploads.py and test_uploads_db.py cover single-chunk upload, 2-chunk assembly byte-equality, auth, content-type and size limits, 404 on unknown path, site-images validation/merge, db.files record). Frontend: admin login, all 12 media slots (1 video + 11 images), founder photo upload -> /api/files path in slot input + success toast + preview render, hero video upload, save, /founder and Home hero picking up uploaded URLs, reset-to-original + save, RFQ submit, all 8 pages render with no console errors and no broken images at 1920x1080 and 390x844. No blocking issues found.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/uploads/chunk", "issue": "Size limit is only enforced after all chunks are assembled, and there is no cap on `total` or per-chunk size, so an authenticated admin can write unbounded data into /tmp/fs_uploads before the 400 is returned. Also no cleanup of abandoned partial upload folders in /tmp/fs_uploads."},
+      {"endpoint": "POST /api/uploads/chunk", "issue": "content_type is taken from the client form field and trusted (no magic-byte sniffing); a text/html payload labelled image/png would be stored and later served with an image content-type. Low risk since serve_file forces the stored content_type, but worth noting."},
+      {"endpoint": "GET /api/files/{path}", "issue": "App sets Cache-Control public,max-age=86400 but the preview ingress rewrites it to no-store, so uploaded media is re-fetched from object storage on every request in preview (informational, not an app bug)."},
+      {"endpoint": "GET /api/files/{path}", "issue": ">80MB video rejection was not exercised end-to-end (only the shared limit branch via a 15MB+ image, which returned 400 as expected). Code path reviewed and is identical."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_uploads.py",
+    "/app/backend/tests/test_uploads_db.py",
+    "/app/backend/tests/test_db_persistence.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Optional hardening: validate `total`/chunk size and reject oversize uploads before assembling in /tmp; add a janitor for stale /tmp/fs_uploads folders."
+  ],
+  "critical_code_review_comments": [
+    "uploads/chunk writes every chunk to disk before checking the size limit — enforce a running byte budget per upload_id.",
+    "Consider sniffing file magic bytes instead of trusting the client-provided content_type form field."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_uploads.py (new)",
+    "/app/backend/tests/test_uploads_db.py (new)",
+    "/app/backend/tests/test_db_persistence.py (rewritten — old version asserted on a stale hardcoded enquiry marker and always failed; now self-seeding + self-cleaning)"
+  ],
+  "success_rate": {"backend": "100% (35/35)", "frontend": "100% of tested flows"},
+  "seed_data_creation": "Temporary uploads (TEST_*.png/.mp4) and TEST_ enquiries — all cleaned up: db.files TEST_ rows soft-deleted (is_deleted true, verified 404 on serve), TEST_ enquiries deleted, db.site_config.images restored to defaults (verified no '/api/files' values remain, founder + heroVideo back to original artifact URLs).",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": true,
+  "test_credentials": "admin@fluoroseals.in / FluoroAdmin@2026 (from /app/memory/test_credentials.md) — login works; wrong-password attempts limited to 1 during this run",
+  "context_for_next_testing_agent": "Upload feature verified end-to-end via UI and API. Reusable suites: tests/test_uploads.py (upload/limits/security/site-images), tests/test_uploads_db.py (db.files record + soft-delete 404). Playwright pattern that works for uploads: page.locator('[data-testid=\"admin-upload-<key>\"] input[type=file]').set_input_files({name,mimeType,buffer}); wait ~4s then read the slot input value. Headless Chromium cannot decode H.264 — only assert hero-video src. Always soft-delete TEST_ db.files rows and reset site_config images after testing.",
+  "rca_of_the_issue": "No functional defects found this iteration. The single pre-existing pytest failure (test_db_persistence) was a stale test asserting on a hardcoded enquiry document from iteration 2, not an application bug; rewritten to be self-contained."
+}

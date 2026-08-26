@@ -1,0 +1,88 @@
+{
+  "summary": "Full re-test of the redesigned Fluoro Seals site (8 pages + new /admin image manager). Backend: 20/21 pytest tests pass (health, contact/enquiry validation, status, admin auth, site-images CRUD, bcrypt hash format, Mongo persistence); the only failure is the brute-force lockout, which never triggers behind the k8s ingress. Frontend: hero content/CTAs, pill nav (all 7 links + quote CTA), mobile menu, all 8 pages render with zero console errors and no horizontal overflow at 1920/768/390, all home sections + case cards present, RFQ form submits (POST /api/contact 200 -> success block, row verified in Mongo `enquiries`), and the full admin flow works end-to-end (wrong password 401 + inline error, login, 11 image slots, heroBackdrop override applied on Home, reset-to-original restored, logout clears token).",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "/api/auth/login",
+        "issue": "Brute-force lockout is ineffective. auth.py keys attempts on request.client.host, which behind the k8s ingress is the proxy pod IP and rotates (observed 10.208.134.70 and 10.208.134.66). 7 consecutive wrong passwords all returned 401 (counts split 3/4) and the 5-attempt/15-min 429 never fired. Fix: derive the client IP from the first hop of X-Forwarded-For, or key the counter on the email alone (plus optional IP).",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "PUT /api/site-images",
+        "issue": "Destructive replace: the handler stores only the keys present in the request body, so any partial payload silently wipes previously saved overrides. UI happens to send all 11 keys; API contract should merge (`$set` per key) or be documented."
+      },
+      {
+        "endpoint": "CORS (app-wide)",
+        "issue": "CORS_ORIGINS=\"*\" combined with allow_credentials=True. Playbook expects explicit origins when credentials are allowed; wildcard + credentials is invalid for cookie/credentialed requests."
+      },
+      {
+        "endpoint": "/api/contact (email)",
+        "issue": "Not a defect: customer confirmation email returns 422 for undeliverable test domains (Resend proxy: 'Undeliverable recipient ... for testing use delivered@resend.dev'). Owner notification returns 202. Submission still returns 200 as designed."
+      },
+      {
+        "endpoint": "server.py",
+        "issue": "Uses deprecated @app.on_event(\"startup\"/\"shutdown\"); migrate to lifespan handlers."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "/contact",
+        "issues": [
+          "Duplicate content: PageHeader h1 'Send us your requirement' + the same intro paragraph is repeated by the RfqForm section heading immediately below (headings array: ['Send us your requirement','Send us your requirement', ...]).",
+          "~180px of empty dead space between the page header and the form block."
+        ]
+      },
+      {
+        "screen": "All inner page headers (/services, /capabilities, /about, /projects, /founder, /import-substitution)",
+        "issues": ["Large empty band (~100-150px) below the header intro before the next section; header eyebrow shows section numbers like '[ 08 / REQUEST A QUOTE ]' on a standalone page, which reads oddly."]
+      },
+      {
+        "screen": "Home hero (desktop 1920)",
+        "issues": ["Two-column intro copy under the nav: the right-hand trust line is bottom-aligned while the left paragraph is top-aligned, so the two columns look unrelated."]
+      },
+      {
+        "screen": "Content/images",
+        "issues": ["'Founder portrait' slot shows a machine component photo, not a person. 'Case study — HAL hydroforming' uses a generic Pexels stock hydraulic photo while every other image is a real company photo."]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/test_admin.py",
+    "/app/backend/tests/test_db_persistence.py",
+    "/app/backend/tests/test_lockout.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Fix brute-force lockout: use X-Forwarded-For first hop (or email-only key) instead of request.client.host, otherwise the 5-attempt lockout is dead code behind the ingress.",
+    "Make PUT /api/site-images merge per-key instead of replacing the whole images map.",
+    "Set CORS_ORIGINS to explicit origins (preview + prod) since allow_credentials=True.",
+    "Remove the duplicated heading/intro on /contact (PageHeader vs RfqForm) and tighten the empty gap.",
+    "Consider httpOnly cookie for the admin JWT instead of localStorage (fs_admin_token) to reduce XSS exposure."
+  ],
+  "critical_code_review_comments": [
+    "auth.py assert_not_locked/record_failure identifier = f\"{ip}:{email}\" — ip is the ingress pod IP in this deployment; counters fragment and lockout never fires. Verified empirically.",
+    "server.py put_site_images overwrites db.site_config.images wholesale; a client sending one key erases the rest.",
+    "auth.py require_admin re-reads os.environ['ADMIN_EMAIL'] on every request and compares to the token sub — fine, but rotating ADMIN_EMAIL silently invalidates tokens with a generic 'Invalid token' 401.",
+    "Admin JWT is stored in localStorage; playbook prefers httpOnly cookies. CORS wildcard with allow_credentials=True should be tightened."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_admin.py (new)",
+    "/app/backend/tests/test_db_persistence.py (new)",
+    "/app/backend/tests/test_lockout.py (new)",
+    "/app/tests/cleanup.py (new — test-data cleanup helper)"
+  ],
+  "success_rate": {"backend": "95% (20/21)", "frontend": "100% of tested flows"},
+  "seed_data_creation": "Created and then deleted TEST_ enquiries/status rows and qa_lockout_probe login_attempts. Verified db.site_config.images is back to the exact DEFAULT_IMAGES values after the heroBackdrop override test.",
+  "should_call_test_agent_after_fix": true,
+  "should_main_agent_self_test": false,
+  "test_credentials": "admin@fluoroseals.in / FluoroAdmin@2026 (from /app/memory/test_credentials.md) — verified working; bcrypt hash in db.admin_users starts with $2b$",
+  "context_for_next_testing_agent": "Backend suite lives in /app/backend/tests (pytest.ini already has -n/loadscope; do not pass -p no:xdist). test_lockout.py is the known-failing test tracking the ingress-IP lockout bug — it uses a throwaway email so the real admin identifier is never locked; still limit wrong-password attempts for admin@fluoroseals.in. Hero <video> fails in headless Chromium (expected); the ken-burns <img> renders. Customer confirmation email 422s for non-deliverable domains — use delivered@resend.dev when submitting RFQ forms. Admin image override + reset flow was fully exercised and state restored.",
+  "rca_of_the_issue": "Lockout RCA: FastAPI's request.client.host resolves to the Kubernetes ingress/proxy pod address, not the real client. Repro: POST /api/auth/login 7x with a wrong password -> all 401; db.login_attempts shows two docs for the same email with counts 3 and 4 under different 10.208.134.x IPs. Mitigation: parse X-Forwarded-For (first entry) for the identifier or drop the IP component."
+}

@@ -1,0 +1,95 @@
+{
+  "theme": "light",
+  "project_name": "Fluoro Seals Die Casting Machinery",
+  "design_concept": "Industrial Blueprint & Heavy Machinery Art Direction",
+  "typography": {
+    "heading_font": "Oswald, sans-serif",
+    "body_font": "IBM Plex Sans, sans-serif",
+    "mono_font": "IBM Plex Mono, monospace",
+    "hierarchy": {
+      "h1": "text-5xl sm:text-6xl md:text-7xl font-oswald font-bold tracking-tighter uppercase text-slate-900",
+      "h2": "text-4xl sm:text-5xl font-oswald font-bold tracking-tight uppercase text-slate-900",
+      "h3": "text-2xl sm:text-3xl font-oswald font-medium uppercase text-slate-800",
+      "body": "text-base sm:text-lg font-ibm-plex-sans leading-relaxed text-slate-600",
+      "label": "text-xs sm:text-sm font-ibm-plex-mono tracking-[0.2em] uppercase text-blue-700 font-semibold"
+    }
+  },
+  "colors": {
+    "primary": "#0F172A",
+    "secondary": "#1D4ED8",
+    "accent": "#2563EB",
+    "background": "#F8FAFC",
+    "surface": "#FFFFFF",
+    "text_primary": "#0F172A",
+    "text_secondary": "#475569",
+    "border": "#E2E8F0",
+    "blueprint_grid": "rgba(29, 78, 216, 0.08)"
+  },
+  "visual_enhancers": {
+    "borders": "1px solid border-slate-200. Use border-blue-900/10 for structural grid lines.",
+    "shadows": "Industrial brutalist: shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] for key cards and buttons.",
+    "textures": "Background blueprint grid pattern: bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]",
+    "corners": "Sharp, absolute precision. rounded-none on all components to emphasize heavy engineering.",
+    "corner_markers": "Add small crosshairs or '+' signs at the corners of main sections for a technical drawing feel."
+  },
+  "layouts": {
+    "general": "The Swiss Grid: Use a strict 12-column bento grid for data and portfolios. Generous padding (py-24 or py-32). Left-align everything. Use explicit section numbering (e.g., [ 01 / ABOUT ]).",
+    "hero": "Split cinematic layout. Left: massive typographic statement ('PRECISION DIE CASTING MACHINERY') with technical metadata. Right: Image grid/slider with parallax motion.",
+    "about": "Data-heavy bento grid. Call out '1998', '25+ YEARS', 'ISO CERTIFIED', '2700 TON CAPACITY' in large typography.",
+    "products_services": "Technical list layout. Hovering over a service reveals a floating image (hydraulic cylinders, power packs) using Framer Motion.",
+    "portfolio_projects": "Large image cards highlighting '1350 Ton Refurbishing', 'Missile Launching Pads'. Use mono-spaced font for stats (e.g., '21-DAY TURNAROUND').",
+    "founder": "Editorial layout. Large portrait of Nanjappa K.K. overlapping a large typographic quote. High contrast.",
+    "contact": "Technical form layout resembling a blueprint document. Clear inputs with sharp borders."
+  },
+  "components": {
+    "button_primary": "bg-blue-700 text-white font-ibm-plex-mono uppercase tracking-widest px-8 py-4 hover:bg-slate-900 transition-colors duration-300 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none",
+    "button_secondary": "bg-transparent border-2 border-slate-900 text-slate-900 font-ibm-plex-mono uppercase tracking-widest px-8 py-4 hover:bg-slate-900 hover:text-white transition-colors duration-300",
+    "card": "border border-slate-200 bg-white p-8 relative overflow-hidden group hover:border-blue-500 transition-colors. Include small corner markers (+).",
+    "navigation": "Sticky crystal glass header: backdrop-blur-xl bg-white/80 border-b border-slate-200. Technical minimalist links. Use data-testid attributes for links.",
+    "footer": "Deep Navy background (bg-slate-900) with white/slate-300 text. Massive typography for contact info."
+  },
+  "motion": {
+    "scroll": "Use Lenis for smooth scrolling. This is MANDATORY for the premium feel.",
+    "reveal": "Use Framer Motion. Elements should stagger fade-up (y: 20, opacity: 0 -> 1) on scroll.",
+    "image_hover": "Images inside cards should scale up slightly (scale-105) on hover with a slow transition-transform duration-700 ease-out.",
+    "marquee": "Use a slow, text-based marquee (react-fast-marquee) for the client list (TVS, HAL Aerospace, BDL, etc.) in uppercase mono font."
+  },
+  "image_urls": {
+    "hero_factory": "https://images.pexels.com/photos/34718922/pexels-photo-34718922.jpeg",
+    "blueprint_parts": "https://images.unsplash.com/photo-1769147339214-076740872485",
+    "machinery_detail": "https://images.pexels.com/photos/11157438/pexels-photo-11157438.jpeg",
+    "welder_action": "https://images.unsplash.com/photo-1738162837389-3b02d6dd507b",
+    "hydraulic_cylinders": "https://images.pexels.com/photos/36532643/pexels-photo-36532643.jpeg",
+    "abstract_metal": "https://images.pexels.com/photos/36577682/pexels-photo-36577682.jpeg"
+  },
+  "libraries_to_install": [
+    "lucide-react",
+    "framer-motion",
+    "clsx",
+    "tailwind-merge",
+    "@radix-ui/react-slot",
+    "react-fast-marquee",
+    "@studio-freight/react-lenis"
+  ],
+  "instructions_to_main_agent": [
+    "Inject Google Fonts into index.html: Oswald (400,500,600,700), IBM Plex Sans (400,500,600), IBM Plex Mono (400,500,600).",
+    "Configure tailwind.config.js to extend fonts: { oswald: ['Oswald', 'sans-serif'], 'ibm-plex-sans': ['\"IBM Plex Sans\"', 'sans-serif'], 'ibm-plex-mono': ['\"IBM Plex Mono\"', 'monospace'] }.",
+    "Build a Multi-Page layout using React Router if necessary, or a single-page long scrolling marketing site with sticky nav sections.",
+    "Use standard raw HTML/Tailwind for marketing layouts (Hero, About, Portfolio). Only use Shadcn UI components for complex interactions like Forms or Dialogs.",
+    "Implement the 'Blueprint Grid' background in the global CSS or as a Tailwind utility.",
+    "Do NOT center align text. Keep an editorial, left-aligned, highly structured grid approach.",
+    "Add `data-testid` to all actionable items (links, buttons, form inputs).",
+    "Maintain high contrast. Ensure all text over images or dark backgrounds is legible.",
+    "Build the Contact form with real input fields and a submit button."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Avoid generic, 'on distribution' outputs. Make creative, distinctive frontends.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "DO NOT apply universal transition (transition: all). Use specific transitions.",
+    "DO NOT center align the app container.",
+    "Every interaction needs micro-animations.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "NEVER use placeholder URLs. Use the provided image URLs.",
+    "All interactive and key informational elements MUST include a data-testid attribute."
+  ]
+}

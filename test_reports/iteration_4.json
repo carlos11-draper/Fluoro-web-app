@@ -1,0 +1,19 @@
+{
+  "summary": "Frontend-only E2E testing of the new admin-editable brochure (PDF) feature on https://fluoro-connect.preview.emergentagent.com. Verified: (1) no-brochure state hides all 'Download portfolio' buttons on Home hero/RFQ/footer and Contact page; (2) admin login + 'Company brochure (PDF)' slot shows 'No brochure set...'; (3) PDF upload via admin-brochure-upload hidden input succeeded -> success toast 'Brochure updated - live now.', filename 'Current file: TEST_brochure.pdf', 'Open current PDF' link + Remove button appear, and state persists across re-login; (4) after upload, brochure-hero-button, brochure-rfq-button (Home + Contact), brochure-footer-button all render as <a target=_blank> pointing at the /api/files/...pdf URL; clicking opens a popup (new tab) and the served file returns 200 application/pdf with Content-Disposition inline (headless Chromium has no PDF viewer, so it triggers a download event instead of rendering - environment behaviour, not a bug); (5) Remove clears the slot and all public buttons disappear after reload. Regression: 12 admin image slots still render with previews and Home renders normally. Spot-checked backend: GET /api/site-settings public, PUT /api/site-settings without token = 401. Brochure left REMOVED (settings = empty strings) as requested. All 20+ frontend assertions passed; no issues found.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": ["/app/backend/tests/test_brochure.py"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "SiteSettings provider swallows fetch errors silently (.catch(() => {})) - acceptable for auto-hide UX, but a failed /api/site-settings call is indistinguishable from 'no brochure'. Consider logging.",
+    "Admin BrochureSlot fetches /api/site-settings unauthenticated on mount; fine since endpoint is public."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "spot-check only (2/2 checks passed)", "frontend": "100%"},
+  "seed_data_creation": "Uploaded a 193-byte minimal PDF (/app/test_reports/assets/TEST_brochure.pdf) as brochure, then removed it. The uploaded file blob remains under /api/files/fluoro-seals/site-media/ad4918b1-...pdf but is no longer referenced.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": false,
+  "test_credentials": "admin@fluoroseals.in / FluoroAdmin@2026 (worked)",
+  "context_for_next_testing_agent": "Brochure feature fully verified end-to-end on frontend; site left in no-brochure state. Reusable test PDF at /app/test_reports/assets/TEST_brochure.pdf. To upload in Playwright use page.set_input_files('[data-testid=\"admin-brochure-upload\"] input[type=file]', path). Note: clicking brochure links in headless Chromium fires a download event (no PDF viewer) - assert popup/download event + response headers instead of page render. Admin login API path is not /api/admin/login (returns 404) - use the UI form.",
+  "rca_of_the_issue": "N/A - no defects found."
+}
